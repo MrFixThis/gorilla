@@ -1,0 +1,16 @@
+[package]
+name = "gorilla"
+version = "0.1.0"
+authors.workspace = true
+edition = "2021"
+
+[dependencies]
+
+[workspace]
+members = ["crates/*"]
+
+[workspace.package]
+authors = ["MrFixThis <mrfixthis55@gmail.com>"]
+
+[workspace.dependencies]
+anyhow = "1.0.71"
