@@ -79,6 +79,7 @@ impl Lexer {
                 '%' => self.read_bin_op(Percent),
                 '*' => self.read_comp_bin_op(Star, StarStar),
                 '/' => self.read_comp_bin_op(Slash, SlashSlash),
+                '\'' | '"' => todo!("read string literals"),
                 '@' | ',' | '~' | ';' | '{' | '}' | '[' | ']' | '(' | ')' => {
                     let start = self.pos();
                     match ch {
@@ -96,7 +97,7 @@ impl Lexer {
                     }
                 }
                 _ => {
-                    if ch.is_ascii_alphabetic() || ch == '_' || ch == '\'' || ch == '"' {
+                    if ch.is_ascii_alphabetic() || ch == '_' {
                         return self.read_ident_or_kw();
                     } else if ch.is_ascii_digit() {
                         return self.read_number();
@@ -162,6 +163,11 @@ impl Lexer {
     }
 
     #[inline(always)]
+    fn peek_back_n(&self, n: usize) -> Option<&char> {
+        self.chars.get(self.state.borrow().pos - n)
+    }
+
+    #[inline(always)]
     fn pos(&self) -> usize {
         self.state.borrow().pos
     }
@@ -180,7 +186,7 @@ impl Lexer {
         }
     }
 
-    fn read_n<'a>(&'a self, n: usize, kind: TokenKind<'a>) -> Token<'a> {
+    fn read_n_and<'a>(&'a self, n: usize, kind: TokenKind<'a>) -> Token<'a> {
         let start = self.pos();
         (0..n).for_each(|_| self.adv_pos());
         self.build_tok(start, kind)
@@ -191,22 +197,22 @@ impl Lexer {
         P: Fn(char) -> bool,
         R: FnOnce(usize, usize) -> Token<'a>,
     {
-        let start = self.pos();
+        let start_pos = self.pos();
         while let Some(&c) = self.char() && p(c) {
             self.adv_pos();
         }
-        r(start, self.pos() - 1)
+        r(start_pos, self.pos())
     }
 
     // +=============+
-    // || SPECIFICS || HACK: Eliminate boilerplate
+    // || SPECIFICS ||
     // +=============+
 
     #[inline]
     fn read_minus(&self) -> Token<'_> {
         match self.peek_next() {
-            Some('>') => self.read_n(1, Arrow),
-            Some('=') => self.read_n(1, BinOpEq(Minus)),
+            Some('>') => self.read_n_and(1, Arrow),
+            Some('=') => self.read_n_and(1, BinOpEq(Minus)),
             _ => self.build_tok(self.pos(), BinOp(Minus)),
         }
     }
@@ -214,7 +220,7 @@ impl Lexer {
     #[inline]
     fn read_not(&self) -> Token<'_> {
         match self.peek_next() {
-            Some('=') => self.read_n(1, Ne),
+            Some('=') => self.read_n_and(1, Ne),
             _ => self.build_tok(self.pos(), Not),
         }
     }
@@ -222,8 +228,8 @@ impl Lexer {
     #[inline]
     fn read_dot(&self) -> Token<'_> {
         match (self.peek_next(), self.peek_n(2)) {
-            (Some('.'), Some('.')) => self.read_n(2, Ellipsis),
-            (Some('.'), _) => self.read_n(1, DotDot),
+            (Some('.'), Some('.')) => self.read_n_and(2, Ellipsis),
+            (Some('.'), _) => self.read_n_and(1, DotDot),
             _ => self.build_tok(self.pos(), Dot),
         }
     }
@@ -231,8 +237,8 @@ impl Lexer {
     #[inline]
     fn read_eq(&self) -> Token<'_> {
         match self.peek_next() {
-            Some('=') => self.read_n(1, EqEq),
-            Some('>') => self.read_n(1, FatArrow),
+            Some('=') => self.read_n_and(1, EqEq),
+            Some('>') => self.read_n_and(1, FatArrow),
             _ => self.build_tok(self.pos(), Eq),
         }
     }
@@ -240,19 +246,37 @@ impl Lexer {
     #[inline]
     fn read_colon(&self) -> Token<'_> {
         match self.peek_next() {
-            Some(':') => self.read_n(1, ColonColon),
+            Some(':') => self.read_n_and(1, ColonColon),
             _ => self.build_tok(self.pos(), Colon),
         }
     }
 
     fn read_bw_or_bool<'a>(&'a self, bw: BinOpToken, bool: TokenKind<'a>) -> Token<'a> {
         match self.peek_next() {
-            Some(ch) if ch == self.char().unwrap() => self.read_n(1, bool),
-            Some('=') => self.read_n(1, BinOpEq(bw)),
+            Some(ch) if ch == self.char().unwrap() => self.read_n_and(1, bool),
+            Some('=') => self.read_n_and(1, BinOpEq(bw)),
             _ => self.build_tok(self.pos(), BinOp(bw)),
         }
     }
+    fn read_bin_op(&self, bin_op: BinOpToken) -> Token<'_> {
+        match self.peek_next() {
+            Some('=') => self.read_n_and(1, BinOpEq(bin_op)),
+            _ => self.build_tok(self.pos(), BinOp(bin_op)),
+        }
+    }
 
+    fn read_comp_bin_op(&self, sing_op: BinOpToken, comp_op: BinOpToken) -> Token<'_> {
+        match self.peek_next() {
+            Some(n) if n == self.char().unwrap() => match self.peek_n(2) {
+                Some('=') => self.read_n_and(2, BinOpEq(comp_op)),
+                _ => self.read_n_and(1, BinOp(comp_op)),
+            },
+            Some('=') => self.read_n_and(1, BinOpEq(sing_op)),
+            _ => self.build_tok(self.pos(), BinOp(sing_op)),
+        }
+    }
+
+    // HACK: Eliminate boilerplate ^^
     fn read_angle<'a>(
         &'a self,
         bw: BinOpToken,
@@ -261,83 +285,84 @@ impl Lexer {
     ) -> Token<'a> {
         match self.peek_next() {
             Some(n) if n == self.char().unwrap() => match self.peek_n(2) {
-                Some('=') => self.read_n(2, BinOpEq(bw)),
+                Some('=') => self.read_n_and(2, BinOpEq(bw)),
                 _ => self.build_tok(self.pos(), BinOp(bw)),
             },
-            Some('=') => self.read_n(1, bool_eq),
+            Some('=') => self.read_n_and(1, bool_eq),
             _ => self.build_tok(self.pos(), bool),
         }
     }
 
-    fn read_bin_op(&self, bin_op: BinOpToken) -> Token<'_> {
-        match self.peek_next() {
-            Some('=') => self.read_n(1, BinOpEq(bin_op)),
-            _ => self.build_tok(self.pos(), BinOp(bin_op)),
-        }
-    }
-
-    fn read_comp_bin_op(&self, sing_op: BinOpToken, comp_op: BinOpToken) -> Token<'_> {
-        match self.peek_next() {
-            Some(n) if n == self.char().unwrap() => match self.peek_n(2) {
-                Some('=') => self.read_n(2, BinOpEq(comp_op)),
-                _ => self.read_n(1, BinOp(comp_op)),
-            },
-            Some('=') => self.read_n(1, BinOpEq(sing_op)),
-            _ => self.build_tok(self.pos(), BinOp(sing_op)),
-        }
-    }
-
+    #[inline(always)]
     fn read_hash(&self) -> Token<'_> {
-        match self.peek_next() {
-            Some('*') => self.read_while_and(
-                |c| c != '*',
-                |s, l| {
-                    self.adv_pos();
-                    let sym = Symbol::new(&self.chars[s + 2..=l - 1]);
-                    let tok = match self.char() {
-                        Some('#') => self.build_tok(s, Comment(Block, sym)),
-                        _ => self.build_tok(s, TokenKind::lit(Error, sym)),
-                    };
-                    tok
-                },
-            ),
-            _ => self.read_while_and(
-                |c| c != '\n' || c != '\0',
-                |s, l| {
-                    self.build_tok(
-                        s,
-                        Comment(Inline, Symbol::new(&self.chars[s + 1..=l])),
-                    )
-                },
-            ),
-        }
-    } // TODO: check this
+        let start_pos = self.pos();
+        self.adv_pos();
 
-    #[inline]
-    fn read_ident_or_kw(&self) -> Token<'_> {
-        match self.char() {
-            Some(&_f @ '\'' | &_f @ '"') => self.read_while_and( // TODO: Improve condition
-                |c| c != '\'' || c != '"',
-                |s, l| {
-                    self.build_tok(
-                        s,
-                        TokenKind::lit(Str, Symbol::new(&self.chars[s + 1..=l - 1])),
-                    )
-                },
-            ),
-            _ => self.read_while_and(
-                |c| c.is_ascii_alphabetic() || c == '_',
-                |s, l| {
-                    let sym = Symbol::new(&self.chars[s..=l]);
-                    let kind = if keyword::is_keyword(&sym) { // TODO: Check corroboration problem
-                        TokenKind::Keyword(sym)
+        let cond = |c| c == '\n' || c == '\0';
+        if let Some('*') = self.char() {
+            loop {
+                if let Some(&c) = self.char() && cond(c) {
+                    if let (Some('*'), Some('#')) = (self.peek_back_n(1), self.peek_back_n(2)) {
+                        return self.build_tok(
+                            start_pos,
+                            Comment(Block, Symbol::new(&self.chars[start_pos + 2..self.pos() - 1]))
+                        );
                     } else {
-                        TokenKind::Ident(sym)
-                    };
-                    self.build_tok(s, kind)
-                },
-            ),
-        }
+                        return self.build_tok(
+                            start_pos,
+                            TokenKind::lit(Error, Symbol::new(&self.chars[start_pos..self.pos()]))
+                        )
+                    }
+                }
+                self.adv_pos();
+            }
+        } else {
+            while let Some(&c) = self.char() && cond(c) {
+                self.adv_pos();
+            }
+
+            self.build_tok(
+                start_pos,
+                Comment(Inline, Symbol::new(&self.chars[start_pos + 1..self.pos()])),
+            )
+        } // NOTE: TEMP -> Trying some stuff out
+
+        //
+        //
+        // self.read_while_and(
+        //     |c| c != '\n' && c != '\0',
+        //     |s, l| match (
+        //         self.char(),
+        //         self.peek_back_n(l - 1),
+        //         self.peek_back_n(s + 2),
+        //         self.peek_back_n(s + 1),
+        //     ) {
+        //         (Some('\n'), Some('*'), Some('*'), Some('#')) => {
+        //             self.build_tok(s, Comment(Block, Symbol::new(&self.chars[s + 2..l - 2])))
+        //         }
+        //         (Some('\n' | '\0'), Some('*'), _, _) => {
+        //             self.build_tok(s, TokenKind::lit(Error, Symbol::new(&self.chars[s..l])))
+        //         }
+        //         _ => self.build_tok(s, Comment(Inline, Symbol::new(&self.chars[s + 1..l]))),
+        //     },
+        // )
+    }
+
+    #[inline(always)]
+    fn read_ident_or_kw(&self) -> Token<'_> {
+        self.read_while_and(
+            |c| c.is_ascii_alphabetic() || c == '_',
+            |s, l| {
+                let sym = Symbol::new(&self.chars[s..l]);
+                let kind = if keyword::is_keyword(&sym) {
+                    // TODO: Check corroboration problem
+                    TokenKind::Keyword(sym)
+                } else {
+                    TokenKind::Ident(sym)
+                };
+                self.build_tok(s, kind)
+            },
+        )
     }
 
     #[inline(always)]
@@ -345,12 +370,13 @@ impl Lexer {
         self.read_while_and(
             |c| c.is_ascii_digit() || c == '.',
             |s, l| {
-                let (kind, chars) = 'b: {
-                    let chars = &self.chars[s..=l];
+                let (kind, chars) = {
+                    let chars = &self.chars[s..l];
                     if chars.contains(&'.') {
-                        break 'b (Float, chars);
+                        (Float, chars)
+                    } else {
+                        (Int, chars)
                     }
-                    (Int, chars)
                 };
                 self.build_tok(s, TokenKind::lit(kind, Symbol::new(chars)))
             },
@@ -362,13 +388,15 @@ impl Lexer {
 mod tests {
     use super::*;
 
-    // static INPUT: &str = "#* BLOCK *#";
+    static INPUT: &str = "#* B
+    var i = 213 *#;
+";
 
-    static INPUT: &str = r#""Rust!""#;
+    // static INPUT: &str = r#""Rust!""#;
 
     // static INPUT: &str = "
     // var my_bool = true;
-    // const l = 13;
+    // const l = 13.5;
     //
     // pub func do_math(n) {
     //     var a = 4;
