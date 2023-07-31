@@ -6,4 +6,3 @@ edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
-proc-macro2 = { version = "1.0.63", features = ["span-locations"] }

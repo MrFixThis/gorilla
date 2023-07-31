@@ -1,14 +1,17 @@
-#![allow(dead_code)]
-
-use std::borrow::{Borrow, Cow};
+use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::ops::Deref;
 
-use proc_macro2::Span;
+#[derive(Clone, Copy, Default, PartialEq)]
+pub struct Span {
+    pub start_row: usize,
+    pub start_col: usize,
+    pub end_row: usize,
+    pub end_col: usize,
+}
 
 #[derive(Clone, PartialEq)]
 #[repr(transparent)]
-pub struct Symbol<'a>(Cow<'a, [char]>);
+pub struct Symbol<'a>(&'a [char]);
 
 impl Debug for Symbol<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -27,23 +30,15 @@ impl Borrow<str> for Symbol<'_> {
     }
 }
 
-impl<'a> Deref for Symbol<'a> {
-    type Target = Cow<'a, [char]>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 impl<'a> Symbol<'a> {
     pub fn new(chars: &'a [char]) -> Symbol<'a> {
-        Self(Cow::Borrowed(chars))
+        Self(chars)
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LitKind {
-    Keyword,
+    Bool,
     Int,
     Float,
     Str,
@@ -142,7 +137,7 @@ pub enum TokenKind<'a> {
     Ne,
     Lt,
     Le,
-    Gr,
+    Gt,
     Ge,
     AndAnd,
     OrOr,
@@ -182,24 +177,28 @@ pub enum TokenKind<'a> {
     Ident(Symbol<'a>),
 
     // Comment symbols
-    // # | #* | #/
+    // # | #*
     Comment(CommentKind, Symbol<'a>),
 
     // Literals
     // i.e true | 5
     Literal(Lit<'a>),
 
+    // Keywords
+    Keyword(Symbol<'a>),
+
     // Marker symbol
     Eof,
 }
 
 impl<'a> TokenKind<'a> {
+    #[inline]
     pub fn lit(kind: LitKind, symbol: Symbol<'a>) -> Self {
         Self::Literal(Lit { kind, symbol })
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Token<'a> {
     pub kind: TokenKind<'a>,
     pub span: Span,
@@ -207,16 +206,23 @@ pub struct Token<'a> {
 
 impl Debug for Token<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?} @[{:?}]", self.kind, self.span)
+        let Span {
+            start_row,
+            start_col,
+            end_row,
+            end_col,
+        } = self.span;
+        write!(
+            f,
+            "{:?} -> [{} - {}, {} - {}]",
+            self.kind, start_row, start_col, end_row, end_col,
+        )
     }
 }
 
 impl<'a> Token<'a> {
     #[inline]
-    pub fn new(kind: TokenKind<'a>) -> Token<'a> {
-        Self {
-            kind,
-            span: Span::call_site(),
-        }
+    pub fn new(kind: TokenKind<'a>, span: Span) -> Token<'a> {
+        Self { kind, span }
     }
 }
