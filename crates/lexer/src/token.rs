@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::fmt::Debug;
+use std::ops::Deref;
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Span {
@@ -9,9 +10,9 @@ pub struct Span {
     pub end_col: usize,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 #[repr(transparent)]
-pub struct Symbol<'a>(&'a [char]);
+pub struct Symbol<'a>(&'a [u8]);
 
 impl Debug for Symbol<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -21,31 +22,34 @@ impl Debug for Symbol<'_> {
 
 impl Borrow<str> for Symbol<'_> {
     fn borrow(&self) -> &str {
-        unsafe {
-            std::str::from_utf8_unchecked(std::slice::from_raw_parts(
-                self.0.as_ptr() as *const u8,
-                self.0.len() * std::mem::size_of::<char>(),
-            ))
-        }
+        unsafe { std::str::from_utf8_unchecked(self.0) }
+    }
+}
+
+impl Deref for Symbol<'_> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.0
     }
 }
 
 impl<'a> Symbol<'a> {
-    pub fn new(chars: &'a [char]) -> Symbol<'a> {
-        Self(chars)
+    #[inline]
+    pub fn new(bytes: &'a [u8]) -> Symbol<'a> {
+        Self(bytes)
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LitKind {
-    Bool,
     Int,
     Float,
     Str,
     Error,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Lit<'a> {
     kind: LitKind,
     symbol: Symbol<'a>,
@@ -90,7 +94,7 @@ pub enum BinOpToken {
     Shr,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TokenKind<'a> {
     //Expression-operator symbols
     /*
@@ -198,7 +202,7 @@ impl<'a> TokenKind<'a> {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Token<'a> {
     pub kind: TokenKind<'a>,
     pub span: Span,

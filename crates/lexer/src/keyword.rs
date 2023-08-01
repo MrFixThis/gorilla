@@ -4,12 +4,12 @@ macro_rules! keyword {
     { $( $( #$doc:tt )? $name:ident: $val:expr ),+ $(,)* } => {
         $(
             $( #[doc = $doc] )?
-            pub const $name: &str = $val;
+            pub const $name: &[u8] = $val.as_bytes();
         )+
 
         /// Checks if a given literal *symbol* refers to a reserved `keyword`.
-        pub fn is_keyword<T: ::std::borrow::Borrow<str>>(src: &T) -> bool {
-            match src.borrow() {
+        pub fn is_keyword(src: &[u8]) -> bool {
+            match src {
                 $( $name => true, )+
                 _ => false,
             }
