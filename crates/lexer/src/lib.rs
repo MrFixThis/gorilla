@@ -1,7 +1,8 @@
 #![allow(non_upper_case_globals)]
 #![feature(let_chains)]
+#![feature(cell_update)]
 
-use std::cell::RefCell;
+use std::cell::Cell;
 use std::fmt::Debug;
 
 pub mod keyword;
@@ -16,34 +17,16 @@ use token::Symbol;
 use token::Token;
 use token::TokenKind::{self, *};
 
-struct State {
-    pos: usize,
-    read_pos: usize,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            pos: 0,
-            read_pos: 1,
-        }
-    }
-}
-
 pub struct Lexer {
-    state: RefCell<State>,
+    pos: Cell<usize>,
     bytes: Vec<u8>,
     lns: Vec<usize>,
 }
 
 impl Debug for Lexer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let state = self.state.borrow();
-        write!(
-            f,
-            "Lexer {{ pos: {}, read_pos: {} }}",
-            state.pos, state.read_pos
-        )
+        let pos = self.pos.get();
+        write!(f, "Lexer {{ pos: {}, read_pos: {} }}", pos, pos + 1)
     }
 }
 
@@ -51,12 +34,12 @@ impl Lexer {
     pub fn new(src: &str) -> Self {
         let bytes = src.as_bytes();
         Self {
-            state: Default::default(),
+            pos: Default::default(),
             bytes: bytes.to_owned(),
             lns: bytes
                 .iter()
                 .enumerate()
-                .filter_map(|(idx, &ch)| (ch == b'\n').then_some(idx))
+                .filter_map(|(idx, &b)| (b == b'\n').then_some(idx))
                 .collect(),
         }
     }
@@ -64,13 +47,14 @@ impl Lexer {
     pub fn next_tok(&self) -> Token<'_> {
         self.consume_ws();
         let tok = match self.byte() {
-            Some(&ch) => match ch {
+            Some(&b) => match b {
                 b'=' => self.read_eq(),
                 b'!' => self.read_not(),
                 b'.' => self.read_dot(),
                 b'#' => self.read_hash(),
                 b':' => self.read_colon(),
                 b'-' => self.read_minus(),
+                b'\'' | b'"' => self.read_str(),
                 b'<' => self.read_angle(Shl, Lt, Le),
                 b'>' => self.read_angle(Shr, Gt, Ge),
                 b'|' => self.read_bw_or_bool(Or, OrOr),
@@ -80,31 +64,24 @@ impl Lexer {
                 b'%' => self.read_bin_op(Percent),
                 b'*' => self.read_comp_bin_op(Star, StarStar),
                 b'/' => self.read_comp_bin_op(Slash, SlashSlash),
-                b'\'' | b'"' => todo!("read string literals"),
-                b'@' | b',' | b'~' | b';' | b'{' | b'}' | b'[' | b']' | b'(' | b')' => {
-                    let start = self.pos();
-                    match ch {
-                        b'@' => self.build_tok(start, At),
-                        b',' => self.build_tok(start, Comma),
-                        b'~' => self.build_tok(start, Tilde),
-                        b';' => self.build_tok(start, Semicolon),
-                        b'{' => self.build_tok(start, OpenDel(Brace)),
-                        b'}' => self.build_tok(start, CloseDel(Brace)),
-                        b'[' => self.build_tok(start, OpenDel(Bracket)),
-                        b']' => self.build_tok(start, CloseDel(Bracket)),
-                        b'(' => self.build_tok(start, OpenDel(Parenthesis)),
-                        b')' => self.build_tok(start, CloseDel(Parenthesis)),
-                        _ => unreachable!(),
-                    }
-                }
+                b'@' => self.build_tok(self.pos(), At),
+                b',' => self.build_tok(self.pos(), Comma),
+                b'~' => self.build_tok(self.pos(), Tilde),
+                b';' => self.build_tok(self.pos(), Semicolon),
+                b'{' => self.build_tok(self.pos(), OpenDel(Brace)),
+                b'}' => self.build_tok(self.pos(), CloseDel(Brace)),
+                b'[' => self.build_tok(self.pos(), OpenDel(Bracket)),
+                b']' => self.build_tok(self.pos(), CloseDel(Bracket)),
+                b'(' => self.build_tok(self.pos(), OpenDel(Parenthesis)),
+                b')' => self.build_tok(self.pos(), CloseDel(Parenthesis)),
+                r if r.is_ascii_digit() => return self.read_number(),
+                r if r.is_ascii_alphabetic() || r == b'_' => return self.read_ident_or_kw(),
                 _ => {
-                    if ch.is_ascii_alphabetic() || ch == b'_' {
-                        return self.read_ident_or_kw();
-                    } else if ch.is_ascii_digit() {
-                        return self.read_number();
-                    } else {
-                        todo!("global literal errors");
-                    }
+                    let pos = self.pos();
+                    self.build_tok(
+                        pos,
+                        TokenKind::lit(Error, Symbol::new(&self.bytes[pos..=pos])),
+                    )
                 }
             },
             None => return self.build_tok(0, Eof),
@@ -150,34 +127,32 @@ impl Lexer {
 
     #[inline(always)]
     fn byte(&self) -> Option<&u8> {
-        self.bytes.get(self.state.borrow().pos)
+        self.bytes.get(self.pos.get())
     }
 
     #[inline(always)]
     fn peek_next(&self) -> Option<&u8> {
-        self.bytes.get(self.state.borrow().read_pos)
+        self.bytes.get(self.pos.get() + 1)
     }
 
     #[inline(always)]
     fn peek_n(&self, n: usize) -> Option<&u8> {
-        self.bytes.get(self.state.borrow().pos + n)
+        self.bytes.get(self.pos.get() + n)
     }
 
     #[inline(always)]
     fn pos(&self) -> usize {
-        self.state.borrow().pos
+        self.pos.get()
     }
 
-    #[inline]
+    #[inline(always)]
     fn adv_pos(&self) {
-        let mut state = self.state.borrow_mut();
-        state.pos += 1;
-        state.read_pos += 1;
+        _ = self.pos.update(|p| p + 1)
     }
 
     #[inline(always)]
     fn consume_ws(&self) {
-        while self.byte().is_some_and(|&ch| ch.is_ascii_whitespace()) {
+        while self.byte().is_some_and(|&b| b.is_ascii_whitespace()) {
             self.adv_pos();
         }
     }
@@ -249,11 +224,12 @@ impl Lexer {
 
     fn read_bw_or_bool<'a>(&'a self, bw: BinOpToken, bool: TokenKind<'a>) -> Token<'a> {
         match self.peek_next() {
-            Some(ch) if ch == self.byte().unwrap() => self.read_n_and(1, bool),
+            Some(b) if b == self.byte().unwrap() => self.read_n_and(1, bool),
             Some(b'=') => self.read_n_and(1, BinOpEq(bw)),
             _ => self.build_tok(self.pos(), BinOp(bw)),
         }
     }
+
     fn read_bin_op(&self, bin_op: BinOpToken) -> Token<'_> {
         match self.peek_next() {
             Some(b'=') => self.read_n_and(1, BinOpEq(bin_op)),
@@ -289,7 +265,7 @@ impl Lexer {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn read_hash(&self) -> Token<'_> {
         self.adv_pos();
         if let Some(&b) = self.byte() && b == b'*' {
@@ -320,7 +296,7 @@ impl Lexer {
     #[inline(always)]
     fn read_ident_or_kw(&self) -> Token<'_> {
         self.read_while_and(
-            |b| b.is_ascii_alphabetic() || b == b'_',
+            |b| b.is_ascii_alphanumeric() || b == b'_',
             |s, l| {
                 let sym = Symbol::new(&self.bytes[s..l]);
                 let kind = if keyword::is_keyword(&sym) {
@@ -332,6 +308,22 @@ impl Lexer {
             },
         )
     }
+
+    #[inline]
+    fn read_str(&self) -> Token<'_> {
+        let f = *self.byte().unwrap();
+        self.adv_pos();
+        self.read_while_and(
+            |b| b != b'"' && b != b'\'',
+            |s, l| {
+                if let Some(&c) = self.byte() && c == f {
+                    self.build_tok(s, TokenKind::lit(Str, Symbol::new(&self.bytes[s..l])))
+                } else {
+                    self.build_tok(s, TokenKind::lit(Error, Symbol::new(&self.bytes[s - 1..=l])))
+                }
+            },
+        )
+    } // TODO: read scaped strings
 
     #[inline(always)]
     fn read_number(&self) -> Token<'_> {
@@ -349,16 +341,20 @@ impl Lexer {
                 self.build_tok(s, TokenKind::lit(kind, Symbol::new(bytes)))
             },
         )
-    }
+    } // TODO: look for multiple periods in the float numbers
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    static INPUT: &str = "
+    static INPUT: &str = r#"
+    $$
     # this is a boolean value
     var my_bool = true;
+
+    # this is a string
+    var my_str = "Nice";
 
     # a float
     const l = 13.5; # yeah, its definetively a float
@@ -366,7 +362,7 @@ mod tests {
     #*
         This is a function that performs some math
     *#
-    pub func do_math(n) {
+    pub func do_math1(n) {
         var a = 4;
         a //= 23;
 
@@ -376,7 +372,7 @@ mod tests {
 
         ~a <<= 2;
         a
-    }";
+    }"#;
 
     #[test]
     fn test_tokenization() {

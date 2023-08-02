@@ -59,8 +59,8 @@ impl Debug for Lit<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Lit { kind, symbol } = self;
         match kind {
-            LitKind::Str | LitKind::Error => write!(f, "\"{symbol:?}\""),
-            _ => write!(f, "{symbol:?}"),
+            LitKind::Str => write!(f, "{kind:?}, \"{symbol:?}\""),
+            _ => write!(f, "{kind:?}, {symbol:?}"),
         }
     }
 }
@@ -196,7 +196,7 @@ pub enum TokenKind<'a> {
 }
 
 impl<'a> TokenKind<'a> {
-    #[inline]
+    #[inline(always)]
     pub fn lit(kind: LitKind, symbol: Symbol<'a>) -> Self {
         Self::Literal(Lit { kind, symbol })
     }
@@ -225,7 +225,7 @@ impl Debug for Token<'_> {
 }
 
 impl<'a> Token<'a> {
-    #[inline]
+    #[inline(always)]
     pub fn new(kind: TokenKind<'a>, span: Span) -> Token<'a> {
         Self { kind, span }
     }
