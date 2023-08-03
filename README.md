@@ -1,9 +1,7 @@
 <div align="center">
     <h1>Gorilla Programming Language</h1>
-    <a href="https://monkeylang.org/">
-        <img src="./assests/Gorila_Lang_Logo.png" width="200" hegiht="200">
-    </a>
-    <p><strong>A resident from tech jungle.</strong></p>
+    <img src="./assests/Gorila_Lang_Logo.png" width="200" hegiht="200">
+    <br><br>
 </div>
 
 *Gorilla* is a straightforward programming language with a Rust/C-like
@@ -18,7 +16,7 @@ The implementations held in this repository are built with
 intended to immerse myself in the magical waters of
 [Interpreters](https://en.wikipedia.org/wiki/Interpreter_(computing)) and
 [Compilers](https://en.wikipedia.org/wiki/Compiler),
-and also to improve my skills in the awesome last mentioned technology.
+and also to improve my skills in the awesome aforementioned technology.
 
 ## TODOS
 - [ ] Improve the README:

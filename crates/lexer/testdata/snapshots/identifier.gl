@@ -1,0 +1,6 @@
+pub func just_a_func() {
+    var a = "gorilla";
+    const = a += " lang!";
+
+    println(a)
+}

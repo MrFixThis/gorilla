@@ -1,0 +1,15 @@
+pub const recurrence = func(n) {
+    if n <= 1 {
+        return 1;
+    }
+
+    recurrence(n - 1)
+}
+
+func my_float() {
+    5.2
+}
+
+pub func greet() {
+    println("Hello, world!");
+}

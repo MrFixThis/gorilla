@@ -1,0 +1,30 @@
+---
+source: crates/lexer/src/tests.rs
+expression: prepare_snapshot(src)
+---
+var my_str = "Rust is my pather";
+^^^ Keyword(var) -> [0 - 0, 0 - 2]
+    ^^^^^^ Ident(my_str) -> [0 - 4, 0 - 9]
+           ^ Eq -> [0 - 11, 0 - 11]
+             ^^^^^^^^^^^^^^^^^^ Literal(Str, "Rust is my pather") -> [0 - 13, 0 - 30]
+                                ^ Semicolon -> [0 - 32, 0 - 32]
+var my_bool = true;
+^^^ Keyword(var) -> [1 - 0, 1 - 2]
+    ^^^^^^^ Ident(my_bool) -> [1 - 4, 1 - 10]
+            ^ Eq -> [1 - 12, 1 - 12]
+              ^^^^ Keyword(true) -> [1 - 14, 1 - 17]
+                  ^ Semicolon -> [1 - 18, 1 - 18]
+var my_int = 13;
+^^^ Keyword(var) -> [2 - 0, 2 - 2]
+    ^^^^^^ Ident(my_int) -> [2 - 4, 2 - 9]
+           ^ Eq -> [2 - 11, 2 - 11]
+             ^^ Literal(Int, 13) -> [2 - 13, 2 - 14]
+               ^ Semicolon -> [2 - 15, 2 - 15]
+var my_float = 5.0;
+^^^ Keyword(var) -> [3 - 0, 3 - 2]
+    ^^^^^^^^ Ident(my_float) -> [3 - 4, 3 - 11]
+             ^ Eq -> [3 - 13, 3 - 13]
+               ^^^ Literal(Float, 5.0) -> [3 - 15, 3 - 17]
+                  ^ Semicolon -> [3 - 18, 3 - 18]
+^ Eof -> [0 - 0, 0 - 0]
+

@@ -1,0 +1,7 @@
+$$
+
+var my_wrong_str = "Rust is life';
+
+#*
+ Undetermined block comment.
+ Yeah, I cannot find my partner.

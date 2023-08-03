@@ -1,0 +1,16 @@
+---
+source: crates/lexer/src/tests.rs
+expression: prepare_snapshot(src)
+---
+# I like bananas
+^^^^^^^^^^^^^^^^ Comment(Inline,  I like bananas) -> [0 - 0, 0 - 15]
+
+#*
+^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Block, 
+    yeah, so do I.
+    Bananas are great.) -> [2 - 0, 4 - 23]
+^ Eof -> [0 - 0, 0 - 0]
+    yeah, so do I.
+    Bananas are great.
+*#
+

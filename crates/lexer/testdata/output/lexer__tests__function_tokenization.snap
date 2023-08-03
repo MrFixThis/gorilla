@@ -1,0 +1,65 @@
+---
+source: crates/lexer/src/tests.rs
+expression: prepare_snapshot(src)
+---
+pub const recurrence = func(n) {
+^^^ Keyword(pub) -> [0 - 0, 0 - 2]
+    ^^^^^ Keyword(const) -> [0 - 4, 0 - 8]
+          ^^^^^^^^^^ Ident(recurrence) -> [0 - 10, 0 - 19]
+                     ^ Eq -> [0 - 21, 0 - 21]
+                       ^^^^ Keyword(func) -> [0 - 23, 0 - 26]
+                           ^ OpenDel(Parenthesis) -> [0 - 27, 0 - 27]
+                            ^ Ident(n) -> [0 - 28, 0 - 28]
+                             ^ CloseDel(Parenthesis) -> [0 - 29, 0 - 29]
+                               ^ OpenDel(Brace) -> [0 - 31, 0 - 31]
+    if n <= 1 {
+    ^^ Keyword(if) -> [1 - 4, 1 - 5]
+       ^ Ident(n) -> [1 - 7, 1 - 7]
+         ^^ Le -> [1 - 9, 1 - 10]
+            ^ Literal(Int, 1) -> [1 - 12, 1 - 12]
+              ^ OpenDel(Brace) -> [1 - 14, 1 - 14]
+        return 1;
+        ^^^^^^ Keyword(return) -> [2 - 8, 2 - 13]
+               ^ Literal(Int, 1) -> [2 - 15, 2 - 15]
+                ^ Semicolon -> [2 - 16, 2 - 16]
+    }
+    ^ CloseDel(Brace) -> [3 - 4, 3 - 4]
+
+    recurrence(n - 1)
+    ^^^^^^^^^^ Ident(recurrence) -> [5 - 4, 5 - 13]
+              ^ OpenDel(Parenthesis) -> [5 - 14, 5 - 14]
+               ^ Ident(n) -> [5 - 15, 5 - 15]
+                 ^ BinOp(Minus) -> [5 - 17, 5 - 17]
+                   ^ Literal(Int, 1) -> [5 - 19, 5 - 19]
+                    ^ CloseDel(Parenthesis) -> [5 - 20, 5 - 20]
+}
+^ CloseDel(Brace) -> [6 - 0, 6 - 0]
+
+func my_float() {
+^^^^ Keyword(func) -> [8 - 0, 8 - 3]
+     ^^^^^^^^ Ident(my_float) -> [8 - 5, 8 - 12]
+             ^ OpenDel(Parenthesis) -> [8 - 13, 8 - 13]
+              ^ CloseDel(Parenthesis) -> [8 - 14, 8 - 14]
+                ^ OpenDel(Brace) -> [8 - 16, 8 - 16]
+    5.2
+    ^^^ Literal(Float, 5.2) -> [9 - 4, 9 - 6]
+}
+^ CloseDel(Brace) -> [10 - 0, 10 - 0]
+
+pub func greet() {
+^^^ Keyword(pub) -> [12 - 0, 12 - 2]
+    ^^^^ Keyword(func) -> [12 - 4, 12 - 7]
+         ^^^^^ Ident(greet) -> [12 - 9, 12 - 13]
+              ^ OpenDel(Parenthesis) -> [12 - 14, 12 - 14]
+               ^ CloseDel(Parenthesis) -> [12 - 15, 12 - 15]
+                 ^ OpenDel(Brace) -> [12 - 17, 12 - 17]
+    println("Hello, world!");
+    ^^^^^^^ Ident(println) -> [13 - 4, 13 - 10]
+           ^ OpenDel(Parenthesis) -> [13 - 11, 13 - 11]
+            ^^^^^^^^^^^^^^ Literal(Str, "Hello, world!") -> [13 - 12, 13 - 25]
+                           ^ CloseDel(Parenthesis) -> [13 - 27, 13 - 27]
+                            ^ Semicolon -> [13 - 28, 13 - 28]
+}
+^ CloseDel(Brace) -> [14 - 0, 14 - 0]
+^ Eof -> [0 - 0, 0 - 0]
+

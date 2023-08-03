@@ -1,0 +1,4 @@
+var my_str = "Rust is my pather";
+var my_bool = true;
+var my_int = 13;
+var my_float = 5.0;

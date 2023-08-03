@@ -1,0 +1,23 @@
+# this is a boolean value
+var my_bool = true;
+
+# this is a string
+var my_str = "Nice";
+
+# a float
+const l = 13.5; # yeah, its definetively a float
+
+#*
+ This is a function does some math... pretty cool!
+*#
+pub func do_math_1(n) {
+    var a = 4;
+    a //= 23;
+
+    if n % 2 == 0 {
+        return (n + 1) * 2;
+    }
+
+    ~a <<= 2;
+    a
+}

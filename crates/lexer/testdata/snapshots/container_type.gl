@@ -1,0 +1,3 @@
+var my_array = [1, 2, 3, 4, 5];
+var my_tuple = (1, 4, 8);
+var my_map = { "nice": 5, "lang": 10 };

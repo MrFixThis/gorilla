@@ -13,4 +13,4 @@ members = ["crates/*"]
 authors = ["MrFixThis <mrfixthis55@gmail.com>"]
 
 [workspace.dependencies]
-anyhow = "1.0.71"
+insta = "1.31.0"

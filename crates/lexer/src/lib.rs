@@ -5,6 +5,9 @@
 use std::cell::Cell;
 use std::fmt::Debug;
 
+#[cfg(test)]
+mod tests;
+
 pub mod keyword;
 pub mod token;
 
@@ -95,7 +98,14 @@ impl Lexer {
             Eof => Default::default(),
             _ => {
                 let mut rows = self.lns.iter().enumerate();
-                let end_pos = self.pos();
+                let end_pos = {
+                    let pos = self.pos();
+                    if start_pos == pos {
+                        pos
+                    } else {
+                        pos - 1
+                    }
+                };
 
                 let start_row = rows
                     .find_map(|(row, &ln)| (ln > start_pos).then_some(row))
@@ -104,7 +114,7 @@ impl Lexer {
                     .find_map(|(row, &ln)| (ln > end_pos).then_some(row - 1))
                     .unwrap_or(start_row);
 
-                let (start_col, end_col) = if start_row > 0 {
+                let (start_col, end_col) = if start_row > 0 && end_row >= start_row {
                     (
                         start_pos - self.lns[start_row - 1] - 1,
                         end_pos - self.lns[end_row - 1] - 1,
@@ -120,10 +130,10 @@ impl Lexer {
                     end_col,
                 }
             }
-        }; // TODO: Check span determination
+        };
 
         Token::new(kind, span)
-    }
+    } // TODO: Check span determination
 
     #[inline(always)]
     fn byte(&self) -> Option<&u8> {
@@ -159,7 +169,7 @@ impl Lexer {
 
     fn read_n_and<'a>(&'a self, n: usize, kind: TokenKind<'a>) -> Token<'a> {
         let start = self.pos();
-        (0..n).for_each(|_| self.adv_pos());
+        (0..=n).for_each(|_| self.adv_pos());
         self.build_tok(start, kind)
     }
 
@@ -267,7 +277,9 @@ impl Lexer {
 
     #[inline]
     fn read_hash(&self) -> Token<'_> {
+        let org_pos = self.pos();
         self.adv_pos();
+
         if let Some(&b) = self.byte() && b == b'*' {
             self.adv_pos();
             self.read_while_and(
@@ -275,12 +287,12 @@ impl Lexer {
                 |s, l| match self.peek_next() {
                     Some(b'#') => {
                         self.adv_pos();
-                        self.build_tok(s, Comment(Block, Symbol::new(&self.bytes[s..l - 1])))
+                        self.build_tok(org_pos, Comment(Block, Symbol::new(&self.bytes[s..l - 1])))
                     },
                     _ => {
                         self.build_tok(
-                            s,
-                            TokenKind::lit(Error, Symbol::new(&self.bytes[s - 2..l + 1]))
+                            org_pos,
+                            TokenKind::lit(Error, Symbol::new(&self.bytes[org_pos..=l - 1]))
                         )
                     },
                 }
@@ -288,7 +300,7 @@ impl Lexer {
         } else {
             self.read_while_and(
                 |b| b != b'\n',
-                |s, l| self.build_tok(s, Comment(Inline, Symbol::new(&self.bytes[s..l])))
+                |s, l| self.build_tok(org_pos, Comment(Inline, Symbol::new(&self.bytes[s..l])))
             )
         }
     }
@@ -312,14 +324,18 @@ impl Lexer {
     #[inline]
     fn read_str(&self) -> Token<'_> {
         let f = *self.byte().unwrap();
+        let org_pos = self.pos();
         self.adv_pos();
+
         self.read_while_and(
             |b| b != b'"' && b != b'\'',
             |s, l| {
                 if let Some(&c) = self.byte() && c == f {
-                    self.build_tok(s, TokenKind::lit(Str, Symbol::new(&self.bytes[s..l])))
+                    self.build_tok(org_pos, TokenKind::lit(Str, Symbol::new(&self.bytes[s..l])))
                 } else {
-                    self.build_tok(s, TokenKind::lit(Error, Symbol::new(&self.bytes[s - 1..=l])))
+                    self.build_tok(
+                        org_pos, TokenKind::lit(Error, Symbol::new(&self.bytes[org_pos..=l]))
+                    )
                 }
             },
         )
@@ -342,52 +358,4 @@ impl Lexer {
             },
         )
     } // TODO: look for multiple periods in the float numbers
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    static INPUT: &str = r#"
-    $$
-    # this is a boolean value
-    var my_bool = true;
-
-    # this is a string
-    var my_str = "Nice";
-
-    # a float
-    const l = 13.5; # yeah, its definetively a float
-
-    #*
-        This is a function that performs some math
-    *#
-    pub func do_math1(n) {
-        var a = 4;
-        a //= 23;
-
-        if n % 2 == 0 {
-            return (n + 1) * 2;
-        }
-
-        ~a <<= 2;
-        a
-    }"#;
-
-    #[test]
-    fn test_tokenization() {
-        let lexer = Lexer::new(INPUT);
-        let mut toks: Vec<Token<'_>> = Vec::new();
-
-        loop {
-            let tok = lexer.next_tok();
-            toks.push(tok);
-            if tok.kind == Eof {
-                break;
-            }
-        }
-
-        dbg!(&toks);
-        assert!(toks.len() >= 1);
-    }
 }

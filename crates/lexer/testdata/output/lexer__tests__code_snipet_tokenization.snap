@@ -1,0 +1,90 @@
+---
+source: crates/lexer/src/tests.rs
+expression: prepare_snapshot(src)
+---
+# this is a boolean value
+^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Inline,  this is a boolean value) -> [0 - 0, 0 - 24]
+var my_bool = true;
+^^^ Keyword(var) -> [1 - 0, 1 - 2]
+    ^^^^^^^ Ident(my_bool) -> [1 - 4, 1 - 10]
+            ^ Eq -> [1 - 12, 1 - 12]
+              ^^^^ Keyword(true) -> [1 - 14, 1 - 17]
+                  ^ Semicolon -> [1 - 18, 1 - 18]
+
+# this is a string
+^^^^^^^^^^^^^^^^^^ Comment(Inline,  this is a string) -> [3 - 0, 3 - 17]
+var my_str = "Nice";
+^^^ Keyword(var) -> [4 - 0, 4 - 2]
+    ^^^^^^ Ident(my_str) -> [4 - 4, 4 - 9]
+           ^ Eq -> [4 - 11, 4 - 11]
+             ^^^^^ Literal(Str, "Nice") -> [4 - 13, 4 - 17]
+                   ^ Semicolon -> [4 - 19, 4 - 19]
+
+# a float
+^^^^^^^^^ Comment(Inline,  a float) -> [6 - 0, 6 - 8]
+const l = 13.5; # yeah, its definetively a float
+^^^^^ Keyword(const) -> [7 - 0, 7 - 4]
+      ^ Ident(l) -> [7 - 6, 7 - 6]
+        ^ Eq -> [7 - 8, 7 - 8]
+          ^^^^ Literal(Float, 13.5) -> [7 - 10, 7 - 13]
+              ^ Semicolon -> [7 - 14, 7 - 14]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Inline,  yeah, its definetively a float) -> [7 - 16, 7 - 47]
+
+#*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Block, 
+ This is a function does some math... pretty cool!) -> [9 - 0, 10 - 51]
+ This is a function does some math... pretty cool!
+*#
+pub func do_math_1(n) {
+^^^ Keyword(pub) -> [12 - 0, 12 - 2]
+    ^^^^ Keyword(func) -> [12 - 4, 12 - 7]
+         ^^^^^^^^^ Ident(do_math_1) -> [12 - 9, 12 - 17]
+                  ^ OpenDel(Parenthesis) -> [12 - 18, 12 - 18]
+                   ^ Ident(n) -> [12 - 19, 12 - 19]
+                    ^ CloseDel(Parenthesis) -> [12 - 20, 12 - 20]
+                      ^ OpenDel(Brace) -> [12 - 22, 12 - 22]
+    var a = 4;
+    ^^^ Keyword(var) -> [13 - 4, 13 - 6]
+        ^ Ident(a) -> [13 - 8, 13 - 8]
+          ^ Eq -> [13 - 10, 13 - 10]
+            ^ Literal(Int, 4) -> [13 - 12, 13 - 12]
+             ^ Semicolon -> [13 - 13, 13 - 13]
+    a //= 23;
+    ^ Ident(a) -> [14 - 4, 14 - 4]
+      ^^^ BinOpEq(SlashSlash) -> [14 - 6, 14 - 8]
+          ^^ Literal(Int, 23) -> [14 - 10, 14 - 11]
+            ^ Semicolon -> [14 - 12, 14 - 12]
+
+    if n % 2 == 0 {
+    ^^ Keyword(if) -> [16 - 4, 16 - 5]
+       ^ Ident(n) -> [16 - 7, 16 - 7]
+         ^ BinOp(Percent) -> [16 - 9, 16 - 9]
+           ^ Literal(Int, 2) -> [16 - 11, 16 - 11]
+             ^^ EqEq -> [16 - 13, 16 - 14]
+                ^ Literal(Int, 0) -> [16 - 16, 16 - 16]
+                  ^ OpenDel(Brace) -> [16 - 18, 16 - 18]
+        return (n + 1) * 2;
+        ^^^^^^ Keyword(return) -> [17 - 8, 17 - 13]
+               ^ OpenDel(Parenthesis) -> [17 - 15, 17 - 15]
+                ^ Ident(n) -> [17 - 16, 17 - 16]
+                  ^ BinOp(Plus) -> [17 - 18, 17 - 18]
+                    ^ Literal(Int, 1) -> [17 - 20, 17 - 20]
+                     ^ CloseDel(Parenthesis) -> [17 - 21, 17 - 21]
+                       ^ BinOp(Star) -> [17 - 23, 17 - 23]
+                         ^ Literal(Int, 2) -> [17 - 25, 17 - 25]
+                          ^ Semicolon -> [17 - 26, 17 - 26]
+    }
+    ^ CloseDel(Brace) -> [18 - 4, 18 - 4]
+
+    ~a <<= 2;
+    ^ Tilde -> [20 - 4, 20 - 4]
+     ^ Ident(a) -> [20 - 5, 20 - 5]
+       ^^^ BinOpEq(Shl) -> [20 - 7, 20 - 9]
+           ^ Literal(Int, 2) -> [20 - 11, 20 - 11]
+            ^ Semicolon -> [20 - 12, 20 - 12]
+    a
+    ^ Ident(a) -> [21 - 4, 21 - 4]
+}
+^ CloseDel(Brace) -> [22 - 0, 22 - 0]
+^ Eof -> [0 - 0, 0 - 0]
+
