@@ -20,10 +20,10 @@ fn prepare_snapshot(src: &str) -> String {
 
     loop {
         let tok = lexer.next_tok();
-        toks.push_back(tok);
         if tok.kind == Eof {
-            break;
+            break toks.push_back(tok);
         }
+        toks.push_back(tok);
     }
 
     let mut out = String::new();

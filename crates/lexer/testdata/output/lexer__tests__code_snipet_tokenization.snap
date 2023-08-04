@@ -31,8 +31,9 @@ const l = 13.5; # yeah, its definetively a float
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Inline,  yeah, its definetively a float) -> [7 - 16, 7 - 47]
 
 #*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Block, 
- This is a function does some math... pretty cool!) -> [9 - 0, 10 - 51]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Block, 
+ This is a function does some math... pretty cool!
+) -> [9 - 0, 10 - 52]
  This is a function does some math... pretty cool!
 *#
 pub func do_math_1(n) {

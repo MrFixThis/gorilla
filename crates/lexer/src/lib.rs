@@ -98,13 +98,9 @@ impl Lexer {
             Eof => Default::default(),
             _ => {
                 let mut rows = self.lns.iter().enumerate();
-                let end_pos = {
-                    let pos = self.pos();
-                    if start_pos == pos {
-                        pos
-                    } else {
-                        pos - 1
-                    }
+                let end_pos = match self.pos() {
+                    p if p == start_pos => p,
+                    p => p - 1
                 };
 
                 let start_row = rows
@@ -133,7 +129,7 @@ impl Lexer {
         };
 
         Token::new(kind, span)
-    } // TODO: Check span determination
+    } // TODO: Check span determination for block comments
 
     #[inline(always)]
     fn byte(&self) -> Option<&u8> {
@@ -287,7 +283,8 @@ impl Lexer {
                 |s, l| match self.peek_next() {
                     Some(b'#') => {
                         self.adv_pos();
-                        self.build_tok(org_pos, Comment(Block, Symbol::new(&self.bytes[s..l - 1])))
+                        self.adv_pos();
+                        self.build_tok(org_pos, Comment(Block, Symbol::new(&self.bytes[s..l])))
                     },
                     _ => {
                         self.build_tok(

@@ -14,3 +14,16 @@ authors = ["MrFixThis <mrfixthis55@gmail.com>"]
 
 [workspace.dependencies]
 insta = "1.31.0"
+
+[workspace.dependencies.criterion]
+version = "0.5.1"
+default_features = false
+features = ["cargo_bench_support"]
+
+[profile.release-lto]
+inherits = "release"
+lto = true
+
+[profile.bench-lto]
+inherits = "release"
+lto = true
