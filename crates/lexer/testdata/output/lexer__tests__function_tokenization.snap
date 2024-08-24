@@ -3,23 +3,23 @@ source: crates/lexer/src/tests.rs
 expression: prepare_snapshot(src)
 ---
 pub const recurrence = func(n) {
-^^^ Keyword(pub) -> [0 - 0, 0 - 2]
-    ^^^^^ Keyword(const) -> [0 - 4, 0 - 8]
+^^^ Keyword(Pub) -> [0 - 0, 0 - 2]
+    ^^^^^ Keyword(Const) -> [0 - 4, 0 - 8]
           ^^^^^^^^^^ Ident(recurrence) -> [0 - 10, 0 - 19]
                      ^ Eq -> [0 - 21, 0 - 21]
-                       ^^^^ Keyword(func) -> [0 - 23, 0 - 26]
+                       ^^^^ Keyword(Func) -> [0 - 23, 0 - 26]
                            ^ OpenDel(Parenthesis) -> [0 - 27, 0 - 27]
                             ^ Ident(n) -> [0 - 28, 0 - 28]
                              ^ CloseDel(Parenthesis) -> [0 - 29, 0 - 29]
                                ^ OpenDel(Brace) -> [0 - 31, 0 - 31]
     if n <= 1 {
-    ^^ Keyword(if) -> [1 - 4, 1 - 5]
+    ^^ Keyword(If) -> [1 - 4, 1 - 5]
        ^ Ident(n) -> [1 - 7, 1 - 7]
          ^^ Le -> [1 - 9, 1 - 10]
             ^ Literal(Int, 1) -> [1 - 12, 1 - 12]
               ^ OpenDel(Brace) -> [1 - 14, 1 - 14]
         return 1;
-        ^^^^^^ Keyword(return) -> [2 - 8, 2 - 13]
+        ^^^^^^ Keyword(Return) -> [2 - 8, 2 - 13]
                ^ Literal(Int, 1) -> [2 - 15, 2 - 15]
                 ^ Semicolon -> [2 - 16, 2 - 16]
     }
@@ -36,7 +36,7 @@ pub const recurrence = func(n) {
 ^ CloseDel(Brace) -> [6 - 0, 6 - 0]
 
 func my_float() {
-^^^^ Keyword(func) -> [8 - 0, 8 - 3]
+^^^^ Keyword(Func) -> [8 - 0, 8 - 3]
      ^^^^^^^^ Ident(my_float) -> [8 - 5, 8 - 12]
              ^ OpenDel(Parenthesis) -> [8 - 13, 8 - 13]
               ^ CloseDel(Parenthesis) -> [8 - 14, 8 - 14]
@@ -47,8 +47,8 @@ func my_float() {
 ^ CloseDel(Brace) -> [10 - 0, 10 - 0]
 
 pub func greet() {
-^^^ Keyword(pub) -> [12 - 0, 12 - 2]
-    ^^^^ Keyword(func) -> [12 - 4, 12 - 7]
+^^^ Keyword(Pub) -> [12 - 0, 12 - 2]
+    ^^^^ Keyword(Func) -> [12 - 4, 12 - 7]
          ^^^^^ Ident(greet) -> [12 - 9, 12 - 13]
               ^ OpenDel(Parenthesis) -> [12 - 14, 12 - 14]
                ^ CloseDel(Parenthesis) -> [12 - 15, 12 - 15]
@@ -61,5 +61,4 @@ pub func greet() {
                             ^ Semicolon -> [13 - 28, 13 - 28]
 }
 ^ CloseDel(Brace) -> [14 - 0, 14 - 0]
-^ Eof -> [0 - 0, 0 - 0]
-
+^ Eof -> [14 - 0, 14 - 0]

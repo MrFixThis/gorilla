@@ -6,15 +6,14 @@ expression: prepare_snapshot(src)
 ^^^^^^^^^^^^^^^^ Comment(Inline,  I like bananas) -> [0 - 0, 0 - 15]
 
 #*
-^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Block, 
+^^ Comment(Block, 
     yeah, so do I.
     Bananas are great.
-) -> [2 - 0, 4 - 24]
+) -> [2 - 0, 5 - 1]
     yeah, so do I.
     Bananas are great.
 *#
 
 #* One-line block comment *#
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Block,  One-line block comment ) -> [7 - 0, 7 - 27]
-^ Eof -> [0 - 0, 0 - 0]
-
+^ Eof -> [7 - 0, 7 - 0]

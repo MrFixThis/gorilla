@@ -1,23 +1,27 @@
-# this is a boolean value
-var my_bool = true;
+include std::fs;
 
-# this is a string
-var my_str = "Nice";
+# version
+const ver = (0, 1, 0); # SemVer
 
-# a float
-const l = 13.5; # yeah, its definetively a float
+# out-file name
+var my_str = "gorilla.sample";
 
 #*
- This is a function does some math... pretty cool!
+    Look for the file at the specified path.
 *#
-pub func do_math_1(n) {
-    var a = 4;
-    a //= 23;
-
-    if n % 2 == 0 {
-        return (n + 1) * 2;
+priv func get_file(path) {
+    if file @ fs::read_file_to_str(path) {
+        return file;
     }
+    nil
+}
 
-    ~a <<= 2;
-    a
+#*
+    Shows the contents of a file.
+*#
+pub show_file() {
+    if file @ get_file() {
+        println(file);
+    }
+    println("No file found :(");
 }

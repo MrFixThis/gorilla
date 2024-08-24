@@ -2,90 +2,108 @@
 source: crates/lexer/src/tests.rs
 expression: prepare_snapshot(src)
 ---
-# this is a boolean value
-^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Inline,  this is a boolean value) -> [0 - 0, 0 - 24]
-var my_bool = true;
-^^^ Keyword(var) -> [1 - 0, 1 - 2]
-    ^^^^^^^ Ident(my_bool) -> [1 - 4, 1 - 10]
-            ^ Eq -> [1 - 12, 1 - 12]
-              ^^^^ Keyword(true) -> [1 - 14, 1 - 17]
-                  ^ Semicolon -> [1 - 18, 1 - 18]
+include std::fs;
+^^^^^^^ Keyword(Include) -> [0 - 0, 0 - 6]
+        ^^^ Ident(std) -> [0 - 8, 0 - 10]
+           ^^ ColonColon -> [0 - 11, 0 - 12]
+              ^ Ident(s) -> [0 - 14, 0 - 14]
+               ^ Semicolon -> [0 - 15, 0 - 15]
 
-# this is a string
-^^^^^^^^^^^^^^^^^^ Comment(Inline,  this is a string) -> [3 - 0, 3 - 17]
-var my_str = "Nice";
-^^^ Keyword(var) -> [4 - 0, 4 - 2]
-    ^^^^^^ Ident(my_str) -> [4 - 4, 4 - 9]
-           ^ Eq -> [4 - 11, 4 - 11]
-             ^^^^^ Literal(Str, "Nice") -> [4 - 13, 4 - 17]
-                   ^ Semicolon -> [4 - 19, 4 - 19]
+# version
+^^^^^^^^^ Comment(Inline,  version) -> [2 - 0, 2 - 8]
+const ver = (0, 1, 0); # SemVer
+^^^^^ Keyword(Const) -> [3 - 0, 3 - 4]
+      ^^^ Ident(ver) -> [3 - 6, 3 - 8]
+          ^ Eq -> [3 - 10, 3 - 10]
+            ^ OpenDel(Parenthesis) -> [3 - 12, 3 - 12]
+             ^ Literal(Int, 0) -> [3 - 13, 3 - 13]
+              ^ Comma -> [3 - 14, 3 - 14]
+                ^ Literal(Int, 1) -> [3 - 16, 3 - 16]
+                 ^ Comma -> [3 - 17, 3 - 17]
+                   ^ Literal(Int, 0) -> [3 - 19, 3 - 19]
+                    ^ CloseDel(Parenthesis) -> [3 - 20, 3 - 20]
+                     ^ Semicolon -> [3 - 21, 3 - 21]
+                       ^^^^^^^^ Comment(Inline,  SemVer) -> [3 - 23, 3 - 30]
 
-# a float
-^^^^^^^^^ Comment(Inline,  a float) -> [6 - 0, 6 - 8]
-const l = 13.5; # yeah, its definetively a float
-^^^^^ Keyword(const) -> [7 - 0, 7 - 4]
-      ^ Ident(l) -> [7 - 6, 7 - 6]
-        ^ Eq -> [7 - 8, 7 - 8]
-          ^^^^ Literal(Float, 13.5) -> [7 - 10, 7 - 13]
-              ^ Semicolon -> [7 - 14, 7 - 14]
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Inline,  yeah, its definetively a float) -> [7 - 16, 7 - 47]
+# out-file name
+^^^^^^^^^^^^^^^ Comment(Inline,  out-file name) -> [5 - 0, 5 - 14]
+var my_str = "gorilla.sample";
+^^^ Keyword(Var) -> [6 - 0, 6 - 2]
+    ^^^^^^ Ident(my_str) -> [6 - 4, 6 - 9]
+           ^ Eq -> [6 - 11, 6 - 11]
+             ^^^^^^^^^^^^^^^ Literal(Str, "gorilla.sample") -> [6 - 13, 6 - 27]
+                             ^ Semicolon -> [6 - 29, 6 - 29]
 
 #*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Comment(Block, 
- This is a function does some math... pretty cool!
-) -> [9 - 0, 10 - 52]
- This is a function does some math... pretty cool!
+^^ Comment(Block, 
+    Look for the file at the specified path.
+) -> [8 - 0, 10 - 1]
+    Look for the file at the specified path.
 *#
-pub func do_math_1(n) {
-^^^ Keyword(pub) -> [12 - 0, 12 - 2]
-    ^^^^ Keyword(func) -> [12 - 4, 12 - 7]
-         ^^^^^^^^^ Ident(do_math_1) -> [12 - 9, 12 - 17]
-                  ^ OpenDel(Parenthesis) -> [12 - 18, 12 - 18]
-                   ^ Ident(n) -> [12 - 19, 12 - 19]
-                    ^ CloseDel(Parenthesis) -> [12 - 20, 12 - 20]
-                      ^ OpenDel(Brace) -> [12 - 22, 12 - 22]
-    var a = 4;
-    ^^^ Keyword(var) -> [13 - 4, 13 - 6]
-        ^ Ident(a) -> [13 - 8, 13 - 8]
-          ^ Eq -> [13 - 10, 13 - 10]
-            ^ Literal(Int, 4) -> [13 - 12, 13 - 12]
-             ^ Semicolon -> [13 - 13, 13 - 13]
-    a //= 23;
-    ^ Ident(a) -> [14 - 4, 14 - 4]
-      ^^^ BinOpEq(SlashSlash) -> [14 - 6, 14 - 8]
-          ^^ Literal(Int, 23) -> [14 - 10, 14 - 11]
-            ^ Semicolon -> [14 - 12, 14 - 12]
-
-    if n % 2 == 0 {
-    ^^ Keyword(if) -> [16 - 4, 16 - 5]
-       ^ Ident(n) -> [16 - 7, 16 - 7]
-         ^ BinOp(Percent) -> [16 - 9, 16 - 9]
-           ^ Literal(Int, 2) -> [16 - 11, 16 - 11]
-             ^^ EqEq -> [16 - 13, 16 - 14]
-                ^ Literal(Int, 0) -> [16 - 16, 16 - 16]
-                  ^ OpenDel(Brace) -> [16 - 18, 16 - 18]
-        return (n + 1) * 2;
-        ^^^^^^ Keyword(return) -> [17 - 8, 17 - 13]
-               ^ OpenDel(Parenthesis) -> [17 - 15, 17 - 15]
-                ^ Ident(n) -> [17 - 16, 17 - 16]
-                  ^ BinOp(Plus) -> [17 - 18, 17 - 18]
-                    ^ Literal(Int, 1) -> [17 - 20, 17 - 20]
-                     ^ CloseDel(Parenthesis) -> [17 - 21, 17 - 21]
-                       ^ BinOp(Star) -> [17 - 23, 17 - 23]
-                         ^ Literal(Int, 2) -> [17 - 25, 17 - 25]
-                          ^ Semicolon -> [17 - 26, 17 - 26]
+priv func get_file(path) {
+^^^^ Keyword(Priv) -> [11 - 0, 11 - 3]
+     ^^^^ Keyword(Func) -> [11 - 5, 11 - 8]
+          ^^^^^^^^ Ident(get_file) -> [11 - 10, 11 - 17]
+                  ^ OpenDel(Parenthesis) -> [11 - 18, 11 - 18]
+                   ^^^^ Ident(path) -> [11 - 19, 11 - 22]
+                       ^ CloseDel(Parenthesis) -> [11 - 23, 11 - 23]
+                         ^ OpenDel(Brace) -> [11 - 25, 11 - 25]
+    if file @ fs::read_file_to_str(path) {
+    ^^ Keyword(If) -> [12 - 4, 12 - 5]
+       ^^^^ Ident(file) -> [12 - 7, 12 - 10]
+            ^ At -> [12 - 12, 12 - 12]
+              ^^ Ident(fs) -> [12 - 14, 12 - 15]
+                ^^ ColonColon -> [12 - 16, 12 - 17]
+                   ^^^^^^^^^^^^^^^ Ident(ead_file_to_str) -> [12 - 19, 12 - 33]
+                                  ^ OpenDel(Parenthesis) -> [12 - 34, 12 - 34]
+                                   ^^^^ Ident(path) -> [12 - 35, 12 - 38]
+                                       ^ CloseDel(Parenthesis) -> [12 - 39, 12 - 39]
+                                         ^ OpenDel(Brace) -> [12 - 41, 12 - 41]
+        return file;
+        ^^^^^^ Keyword(Return) -> [13 - 8, 13 - 13]
+               ^^^^ Ident(file) -> [13 - 15, 13 - 18]
+                   ^ Semicolon -> [13 - 19, 13 - 19]
     }
-    ^ CloseDel(Brace) -> [18 - 4, 18 - 4]
-
-    ~a <<= 2;
-    ^ Tilde -> [20 - 4, 20 - 4]
-     ^ Ident(a) -> [20 - 5, 20 - 5]
-       ^^^ BinOpEq(Shl) -> [20 - 7, 20 - 9]
-           ^ Literal(Int, 2) -> [20 - 11, 20 - 11]
-            ^ Semicolon -> [20 - 12, 20 - 12]
-    a
-    ^ Ident(a) -> [21 - 4, 21 - 4]
+    ^ CloseDel(Brace) -> [14 - 4, 14 - 4]
+    nil
+    ^^^ Keyword(Nil) -> [15 - 4, 15 - 6]
 }
-^ CloseDel(Brace) -> [22 - 0, 22 - 0]
-^ Eof -> [0 - 0, 0 - 0]
+^ CloseDel(Brace) -> [16 - 0, 16 - 0]
 
+#*
+^^ Comment(Block, 
+    Shows the contents of a file.
+) -> [18 - 0, 20 - 1]
+    Shows the contents of a file.
+*#
+pub show_file() {
+^^^ Keyword(Pub) -> [21 - 0, 21 - 2]
+    ^^^^^^^^^ Ident(show_file) -> [21 - 4, 21 - 12]
+             ^ OpenDel(Parenthesis) -> [21 - 13, 21 - 13]
+              ^ CloseDel(Parenthesis) -> [21 - 14, 21 - 14]
+                ^ OpenDel(Brace) -> [21 - 16, 21 - 16]
+    if file @ get_file() {
+    ^^ Keyword(If) -> [22 - 4, 22 - 5]
+       ^^^^ Ident(file) -> [22 - 7, 22 - 10]
+            ^ At -> [22 - 12, 22 - 12]
+              ^^^^^^^^ Ident(get_file) -> [22 - 14, 22 - 21]
+                      ^ OpenDel(Parenthesis) -> [22 - 22, 22 - 22]
+                       ^ CloseDel(Parenthesis) -> [22 - 23, 22 - 23]
+                         ^ OpenDel(Brace) -> [22 - 25, 22 - 25]
+        println(file);
+        ^^^^^^^ Ident(println) -> [23 - 8, 23 - 14]
+               ^ OpenDel(Parenthesis) -> [23 - 15, 23 - 15]
+                ^^^^ Ident(file) -> [23 - 16, 23 - 19]
+                    ^ CloseDel(Parenthesis) -> [23 - 20, 23 - 20]
+                     ^ Semicolon -> [23 - 21, 23 - 21]
+    }
+    ^ CloseDel(Brace) -> [24 - 4, 24 - 4]
+    println("No file found :(");
+    ^^^^^^^ Ident(println) -> [25 - 4, 25 - 10]
+           ^ OpenDel(Parenthesis) -> [25 - 11, 25 - 11]
+            ^^^^^^^^^^^^^^^^^ Literal(Str, "No file found :(") -> [25 - 12, 25 - 28]
+                              ^ CloseDel(Parenthesis) -> [25 - 30, 25 - 30]
+                               ^ Semicolon -> [25 - 31, 25 - 31]
+}
+^ CloseDel(Brace) -> [26 - 0, 26 - 0]
+^ Eof -> [26 - 0, 26 - 0]

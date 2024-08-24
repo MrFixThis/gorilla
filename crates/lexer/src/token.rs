@@ -1,85 +1,57 @@
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::Deref;
+mod symbol;
 
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
+use std::fmt::Debug;
+
+use crate::keyword::Keyword;
+pub use symbol::Symbol;
+
+#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq)]
 pub struct Span {
-    pub start_row: usize,
+    pub start_line: usize,
     pub start_col: usize,
-    pub end_row: usize,
+    pub end_line: usize,
     pub end_col: usize,
 }
 
-#[derive(Clone, Copy, PartialEq)]
-#[repr(transparent)]
-pub struct Symbol<'a>(&'a [u8]);
-
-impl Debug for Symbol<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Borrow::<str>::borrow(self))
-    }
-}
-
-impl Borrow<str> for Symbol<'_> {
-    fn borrow(&self) -> &str {
-        unsafe { std::str::from_utf8_unchecked(self.0) }
-    }
-}
-
-impl Deref for Symbol<'_> {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        self.0
-    }
-}
-
-impl<'a> Symbol<'a> {
-    #[inline]
-    pub fn new(bytes: &'a [u8]) -> Symbol<'a> {
-        Self(bytes)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum LitKind {
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum LiteralKind {
     Int,
     Float,
     Str,
     Error,
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub struct Lit<'a> {
-    kind: LitKind,
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+pub struct Literal<'a> {
+    kind: LiteralKind,
     symbol: Symbol<'a>,
 }
 
-impl Debug for Lit<'_> {
+impl Debug for Literal<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Lit { kind, symbol } = self;
+        let Literal { kind, symbol } = self;
         match kind {
-            LitKind::Str => write!(f, "{kind:?}, \"{symbol:?}\""),
+            LiteralKind::Str => write!(f, "{kind:?}, \"{symbol:?}\""),
             _ => write!(f, "{kind:?}, {symbol:?}"),
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum CommentKind {
     Inline,
     Block,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum DelimiterToken {
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum Delimiter {
     Parenthesis,
     Brace,
     Bracket,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum BinOpToken {
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum BinOperator {
     Plus,
     Minus,
     Star,
@@ -94,7 +66,7 @@ pub enum BinOpToken {
     Shr,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum TokenKind<'a> {
     //Expression-operator symbols
     /*
@@ -147,8 +119,8 @@ pub enum TokenKind<'a> {
     OrOr,
     Not,
     Tilde,
-    BinOp(BinOpToken),
-    BinOpEq(BinOpToken),
+    BinOp(BinOperator),
+    BinOpEq(BinOperator),
 
     // Structural symbols
     /*
@@ -176,8 +148,8 @@ pub enum TokenKind<'a> {
     Semicolon,
     Arrow,
     FatArrow,
-    OpenDel(DelimiterToken),
-    CloseDel(DelimiterToken),
+    OpenDel(Delimiter),
+    CloseDel(Delimiter),
     Ident(Symbol<'a>),
 
     // Comment symbols
@@ -186,23 +158,23 @@ pub enum TokenKind<'a> {
 
     // Literals
     // i.e true | 5
-    Literal(Lit<'a>),
+    Literal(Literal<'a>),
 
     // Keywords
-    Keyword(Symbol<'a>),
+    Keyword(Keyword),
 
     // Marker symbol
     Eof,
 }
 
 impl<'a> TokenKind<'a> {
-    #[inline(always)]
-    pub fn lit(kind: LitKind, symbol: Symbol<'a>) -> Self {
-        Self::Literal(Lit { kind, symbol })
+    #[inline]
+    pub fn lit(kind: LiteralKind, symbol: Symbol<'a>) -> Self {
+        Self::Literal(Literal { kind, symbol })
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Token<'a> {
     pub kind: TokenKind<'a>,
     pub span: Span,
@@ -211,9 +183,9 @@ pub struct Token<'a> {
 impl Debug for Token<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Span {
-            start_row,
+            start_line: start_row,
             start_col,
-            end_row,
+            end_line: end_row,
             end_col,
         } = self.span;
         write!(
@@ -225,7 +197,7 @@ impl Debug for Token<'_> {
 }
 
 impl<'a> Token<'a> {
-    #[inline(always)]
+    #[inline]
     pub fn new(kind: TokenKind<'a>, span: Span) -> Token<'a> {
         Self { kind, span }
     }
