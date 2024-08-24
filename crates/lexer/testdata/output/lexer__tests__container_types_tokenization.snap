@@ -3,7 +3,7 @@ source: crates/lexer/src/tests.rs
 expression: prepare_snapshot(src)
 ---
 var my_array = [1, 2, 3, 4, 5];
-^^^ Keyword(var) -> [0 - 0, 0 - 2]
+^^^ Keyword(Var) -> [0 - 0, 0 - 2]
     ^^^^^^^^ Ident(my_array) -> [0 - 4, 0 - 11]
              ^ Eq -> [0 - 13, 0 - 13]
                ^ OpenDel(Bracket) -> [0 - 15, 0 - 15]
@@ -19,7 +19,7 @@ var my_array = [1, 2, 3, 4, 5];
                              ^ CloseDel(Bracket) -> [0 - 29, 0 - 29]
                               ^ Semicolon -> [0 - 30, 0 - 30]
 var my_tuple = (1, 4, 8);
-^^^ Keyword(var) -> [1 - 0, 1 - 2]
+^^^ Keyword(Var) -> [1 - 0, 1 - 2]
     ^^^^^^^^ Ident(my_tuple) -> [1 - 4, 1 - 11]
              ^ Eq -> [1 - 13, 1 - 13]
                ^ OpenDel(Parenthesis) -> [1 - 15, 1 - 15]
@@ -31,7 +31,7 @@ var my_tuple = (1, 4, 8);
                        ^ CloseDel(Parenthesis) -> [1 - 23, 1 - 23]
                         ^ Semicolon -> [1 - 24, 1 - 24]
 var my_map = { "nice": 5, "lang": 10 };
-^^^ Keyword(var) -> [2 - 0, 2 - 2]
+^^^ Keyword(Var) -> [2 - 0, 2 - 2]
     ^^^^^^ Ident(my_map) -> [2 - 4, 2 - 9]
            ^ Eq -> [2 - 11, 2 - 11]
              ^ OpenDel(Brace) -> [2 - 13, 2 - 13]
@@ -44,5 +44,4 @@ var my_map = { "nice": 5, "lang": 10 };
                                   ^^ Literal(Int, 10) -> [2 - 34, 2 - 35]
                                      ^ CloseDel(Brace) -> [2 - 37, 2 - 37]
                                       ^ Semicolon -> [2 - 38, 2 - 38]
-^ Eof -> [0 - 0, 0 - 0]
-
+^ Eof -> [2 - 0, 2 - 0]

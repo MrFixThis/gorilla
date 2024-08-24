@@ -3,20 +3,20 @@ source: crates/lexer/src/tests.rs
 expression: prepare_snapshot(src)
 ---
 pub func just_a_func() {
-^^^ Keyword(pub) -> [0 - 0, 0 - 2]
-    ^^^^ Keyword(func) -> [0 - 4, 0 - 7]
+^^^ Keyword(Pub) -> [0 - 0, 0 - 2]
+    ^^^^ Keyword(Func) -> [0 - 4, 0 - 7]
          ^^^^^^^^^^^ Ident(just_a_func) -> [0 - 9, 0 - 19]
                     ^ OpenDel(Parenthesis) -> [0 - 20, 0 - 20]
                      ^ CloseDel(Parenthesis) -> [0 - 21, 0 - 21]
                        ^ OpenDel(Brace) -> [0 - 23, 0 - 23]
     var a = "gorilla";
-    ^^^ Keyword(var) -> [1 - 4, 1 - 6]
+    ^^^ Keyword(Var) -> [1 - 4, 1 - 6]
         ^ Ident(a) -> [1 - 8, 1 - 8]
           ^ Eq -> [1 - 10, 1 - 10]
             ^^^^^^^^ Literal(Str, "gorilla") -> [1 - 12, 1 - 19]
                      ^ Semicolon -> [1 - 21, 1 - 21]
     const = a += " lang!";
-    ^^^^^ Keyword(const) -> [2 - 4, 2 - 8]
+    ^^^^^ Keyword(Const) -> [2 - 4, 2 - 8]
           ^ Eq -> [2 - 10, 2 - 10]
             ^ Ident(a) -> [2 - 12, 2 - 12]
               ^^ BinOpEq(Plus) -> [2 - 14, 2 - 15]
@@ -30,5 +30,4 @@ pub func just_a_func() {
              ^ CloseDel(Parenthesis) -> [4 - 13, 4 - 13]
 }
 ^ CloseDel(Brace) -> [5 - 0, 5 - 0]
-^ Eof -> [0 - 0, 0 - 0]
-
+^ Eof -> [5 - 0, 5 - 0]

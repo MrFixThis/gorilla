@@ -7,18 +7,17 @@ $$
  ^ Literal(Error, $) -> [0 - 1, 0 - 1]
 
 var my_wrong_str = "Rust is life';
-^^^ Keyword(var) -> [2 - 0, 2 - 2]
+^^^ Keyword(Var) -> [2 - 0, 2 - 2]
     ^^^^^^^^^^^^ Ident(my_wrong_str) -> [2 - 4, 2 - 15]
                  ^ Eq -> [2 - 17, 2 - 17]
                    ^^^^^^^^^^^^^ Literal(Error, "Rust is life') -> [2 - 19, 2 - 31]
                                  ^ Semicolon -> [2 - 33, 2 - 33]
 
 #*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Literal(Error, #*
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Literal(Error, #*
  Undetermined block comment.
  Yeah, I cannot find my partner.
-) -> [4 - 0, 4 - 64]
-^ Eof -> [0 - 0, 0 - 0]
+) -> [4 - 40, 0 - 104]
+^ Eof -> [6 - 0, 6 - 0]
  Undetermined block comment.
  Yeah, I cannot find my partner.
-

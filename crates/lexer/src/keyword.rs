@@ -1,27 +1,37 @@
-//! The reserved `keywords` by the language.
-
 macro_rules! keyword {
     { $( $( #$doc:tt )? $name:ident: $val:expr ),+ $(,)* } => {
-        $(
-            $( #[doc = $doc] )?
-            pub const $name: &[u8] = $val.as_bytes();
-        )+
+        /// Reserved `keywords`.
+        #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+        pub enum Keyword {
+            $(
+                $( #[doc = $doc] )?
+                $name,
+            )*
+        }
 
-        /// Checks if a given literal *symbol* refers to a reserved `keyword`.
-        pub fn is_keyword(src: &[u8]) -> bool {
-            match src {
-                $( $name => true, )+
-                _ => false,
+        impl Keyword {
+            pub fn try_from_bytes(src: &[u8]) -> Option<Self> {
+                match unsafe { std::str::from_utf8_unchecked(src) } { // this may panic, okay?
+                    $( $val => Some(Self::$name), )+
+                    _ => None,
+                }
+            }
+
+            pub fn as_str(&self) -> &str {
+                match self {
+                    $( Self::$name => $val, )+
+                }
             }
         }
     };
 }
 
 keyword! {
-    Var: "var",
-    Const: "const",
+    Nil: "nil",
     True: "true",
     False: "false",
+    Var: "var",
+    Const: "const",
     If: "if",
     Else: "else",
     Elseif: "elseif",
@@ -30,11 +40,9 @@ keyword! {
     Loop: "loop",
     Break: "break",
     Continue: "continue",
-    Match: "match",
-    Enum: "enum",
     Func: "func",
     Return: "return",
-    Pack: "pack",
+    Include: "include",
     Pub: "pub",
-    As: "as",
+    Priv: "priv",
 }
